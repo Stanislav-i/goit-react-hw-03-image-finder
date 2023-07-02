@@ -1,12 +1,24 @@
 import React, { Component } from 'react';
 import { fetchPictures } from 'services/api';
 import { Vortex } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
 //PROPTYPES
 
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Modal } from './Modal/Modal';
 import { ButtonLoadMore } from './Button/Button';
+
+const toastConfig = {
+  position: 'top-center',
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: undefined,
+  theme: 'light',
+};
 
 export class App extends Component {
   state = {
@@ -53,53 +65,106 @@ export class App extends Component {
     form.reset();
   };
 
-  onLoadButtonClick() { 
+  onLoadButtonClick = () => {
     this.setState(prevState => {
-      return { page: prevState.page + 1}
-    })
-  }
-
-  
+      return { page: prevState.page + 1 };
+    });
+  };
 
   addUserRequest(string) {
-    this.setState({ userRequest: string });
+    this.setState({ userRequest: string, page: 1, showButton: false });
   }
 
   async componentDidUpdate(prevProps, prevState) {
     const searchQuery = this.state.userRequest;
-    const page = this.state.page
+    const page = this.state.page;
 
-    if (prevState.userRequest !== this.state.userRequest || prevState.page !== this.state.page)
+    if (
+      prevState.userRequest !== this.state.userRequest ||
+      prevState.page !== this.state.page
+    )
       try {
-        this.setState({isLoading: true})
+        this.setState({ isLoading: true });
         await fetchPictures(searchQuery, page).then(responce => {
           const newPicturesArray = responce.data.hits;
-          // console.log(newPicturesArray.length, this.state.picturesArray);
-          // console.log(this.onLoadButtonClick);
-          if (
-            newPicturesArray.length === 12 &&
-            this.state.picturesArray.length === 0
+          const picturesNumber = responce.data.totalHits;
+          
+          if (prevState.userRequest !== this.state.userRequest &&
+            newPicturesArray.length === 0
+          ) {
+            this.setState({
+              picturesArray: [],
+            });
+            toast.warning(
+              `We haven't found anything... Let's try something else?`,
+              toastConfig
+            );
+          }
+          else if (
+            prevState.userRequest !== this.state.userRequest &&
+            newPicturesArray.length === 12
+          ) {
+            this.setState({
+              picturesArray: newPicturesArray,
+              showButton: true,
+            });
+            toast.success(`Great! We've found ${picturesNumber} images!`, toastConfig);
+          } else if (
+            prevState.userRequest !== this.state.userRequest &&
+            newPicturesArray.length < 12
+          ) {
+            this.setState({ picturesArray: newPicturesArray });
+            toast.success(
+              `Great! We've found ${picturesNumber} images!`,
+              toastConfig
+            );
+          } else if (
+            prevState.userRequest === this.state.userRequest &&
+            prevState.page !== this.state.page &&
+            newPicturesArray.length === 12
           ) {
             this.setState(prevState => {
               return {
-                picturesArray: newPicturesArray,
-                showButton: true,
-                // page: prevState.page + 1,
+                picturesArray: [
+                  ...prevState.picturesArray,
+                  ...newPicturesArray,
+                ],
               };
             });
           } else if (
-            newPicturesArray.length < 12 &&
-            this.state.picturesArray.length === 0
+            prevState.userRequest === this.state.userRequest &&
+            prevState.page !== this.state.page &&
+            newPicturesArray.length < 12
           ) {
-            this.setState({ picturesArray: newPicturesArray });
+            this.setState(prevState => {
+              return {
+                picturesArray: [
+                  ...prevState.picturesArray,
+                  ...newPicturesArray,
+                ],
+                showButton: false,
+              };
+            });
+          } else if (
+            prevState.userRequest === this.state.userRequest &&
+            prevState.page !== this.state.page &&
+            newPicturesArray.length === 0
+          ) { 
+            this.setState({
+              showButton: false,
+            });
+            toast(
+              "We're sorry, but you've reached the end of search results.",
+              toastConfig
+            );
           }
         });
       } catch (error) {
-        this.setState({ error: error.message })
-      } finally { 
-        this.setState({isLoading: false})
+        this.setState({ error: error.message });
+        toast.error(error.message, toastConfig);
+      } finally {
+        this.setState({ isLoading: false });
       }
-  
   }
 
   render() {
@@ -144,7 +209,9 @@ export class App extends Component {
           />
         )}
 
-        {this.state.showButton && <ButtonLoadMore />}
+        {this.state.showButton && (
+          <ButtonLoadMore onClick={this.onLoadButtonClick} />
+        )}
       </div>
     );
   }
