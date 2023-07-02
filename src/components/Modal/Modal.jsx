@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import css from './modal.module.css';
 import React, { Component } from 'react';
 
@@ -32,3 +33,8 @@ export class Modal extends Component {
     );
   }
 }
+
+Modal.propTypes = {
+  fullSizeuUrl: PropTypes.string,
+  closeModal: PropTypes.func,
+};
