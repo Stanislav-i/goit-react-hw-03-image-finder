@@ -11,7 +11,7 @@ import { ButtonLoadMore } from './Button/Button';
 
 const toastConfig = {
   position: 'top-center',
-  autoClose: 3000,
+  autoClose: 1000,
   hideProgressBar: false,
   closeOnClick: true,
   pauseOnHover: true,
@@ -57,11 +57,13 @@ export class App extends Component {
     const form = e.currentTarget;
     const searchQuery = form.elements.searchQueryInput.value;
 
-    this.addUserRequest(searchQuery);
-
     if (searchQuery.trim() === '') {
-      return alert('Type something');
-    }
+      return toast.warning(`Type something :)`, toastConfig);
+    } else if (searchQuery.trim() === this.state.userRequest) {
+      form.reset();
+      return toast.warning(`Ahahahaha! Type something NEW ;)`, toastConfig);
+    } else window.scrollTo(0, 0);
+    this.addUserRequest(searchQuery);
     form.reset();
   };
 
@@ -88,8 +90,9 @@ export class App extends Component {
         await fetchPictures(searchQuery, page).then(responce => {
           const newPicturesArray = responce.data.hits;
           const picturesNumber = responce.data.totalHits;
-          
-          if (prevState.userRequest !== this.state.userRequest &&
+
+          if (
+            prevState.userRequest !== this.state.userRequest &&
             newPicturesArray.length === 0
           ) {
             this.setState({
@@ -99,8 +102,7 @@ export class App extends Component {
               `We haven't found anything... Let's try something else?`,
               toastConfig
             );
-          }
-          else if (
+          } else if (
             prevState.userRequest !== this.state.userRequest &&
             newPicturesArray.length === 12
           ) {
@@ -108,7 +110,10 @@ export class App extends Component {
               picturesArray: newPicturesArray,
               showButton: true,
             });
-            toast.success(`Great! We've found ${picturesNumber} images!`, toastConfig);
+            toast.success(
+              `Great! We've found ${picturesNumber} images!`,
+              toastConfig
+            );
           } else if (
             prevState.userRequest !== this.state.userRequest &&
             newPicturesArray.length < 12
@@ -149,7 +154,7 @@ export class App extends Component {
             prevState.userRequest === this.state.userRequest &&
             prevState.page !== this.state.page &&
             newPicturesArray.length === 0
-          ) { 
+          ) {
             this.setState({
               showButton: false,
             });
@@ -169,18 +174,7 @@ export class App extends Component {
 
   render() {
     return (
-      <div
-        style={
-          {
-            // height: '100vh',
-            // display: 'flex',
-            // justifyContent: 'center',
-            // alignItems: 'center',
-            // fontSize: 40,
-            // color: '#010101'
-          }
-        }
-      >
+      <div>
         <Searchbar onSubmit={this.onSearchClick} />
 
         {this.state.isLoading && (

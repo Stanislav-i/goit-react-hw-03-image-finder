@@ -1,5 +1,9 @@
-import css from './imageGalleryItem.module.css'
-export const ImageGalleryItem = ({ pictureUrl, openModal, modalPictureUrl }) => {
+import css from './imageGalleryItem.module.css';
+export const ImageGalleryItem = ({
+  pictureUrl,
+  openModal,
+  modalPictureUrl,
+}) => {
   return (
     <li
       onClick={() => openModal(modalPictureUrl)}

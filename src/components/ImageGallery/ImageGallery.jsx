@@ -1,4 +1,4 @@
-import css from './imageGallery.module.css'
+import css from './imageGallery.module.css';
 import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 
 export const ImageGallery = ({ data, openModal }) => {
